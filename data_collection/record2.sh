@@ -37,7 +37,7 @@ echo "================================================"
 echo "  Digit360 Data Collection — Independent Trials"
 echo "  Object:    $OBJECT_NAME"
 echo "  Sensor ID: $SENSOR_ID"
-echo "  Trials:    $N_TRIALS × ${TRIAL_DURATION}s per interaction"
+echo "  Trials:    $N_TRIALS per interaction, recorder runs ~$((TRIAL_DURATION + 2))s each (TRIAL_DURATION + 2)"
 echo "  Output:    $OBJ_DIR"
 echo "================================================"
 echo ""
@@ -114,7 +114,7 @@ run_interaction() {
 
     echo "────────────────────────────────────────────────"
     echo "  INTERACTION: ${interaction^^} — $description"
-    echo "  $N_TRIALS trials × ${TRIAL_DURATION} seconds"
+    echo "  $N_TRIALS trials, recorder runs ~$((TRIAL_DURATION + 2)) seconds each"
     echo "────────────────────────────────────────────────"
     echo ""
 
@@ -143,10 +143,10 @@ run_interaction() {
 # ── Protocol ─────────────────────────────────────────
 echo "┌──────────────────────────────────────────────┐"
 echo "│  PROTOCOL FOR: $OBJECT_NAME (Sensor $SENSOR_ID)"
-echo "│  tap     → $N_TRIALS trials × ${TRIAL_DURATION}s                     │"
-echo "│  squeeze → $N_TRIALS trials × ${TRIAL_DURATION}s                     │"
-echo "│  slide   → $N_TRIALS trials × ${TRIAL_DURATION}s                     │"
-echo "│  hold    → $N_TRIALS trials × ${TRIAL_DURATION}s                     │"
+echo "│  tap     → $N_TRIALS trials × ~$((TRIAL_DURATION + 2))s                  │"
+echo "│  squeeze → $N_TRIALS trials × ~$((TRIAL_DURATION + 2))s                  │"
+echo "│  slide   → $N_TRIALS trials × ~$((TRIAL_DURATION + 2))s                  │"
+echo "│  hold    → $N_TRIALS trials × ~$((TRIAL_DURATION + 2))s                  │"
 echo "└──────────────────────────────────────────────┘"
 echo ""
 
