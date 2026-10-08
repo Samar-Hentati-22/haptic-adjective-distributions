@@ -5,9 +5,10 @@ in human_study/plots/:
   Session 1 (obj_01-obj_45): plot_heatmap_named.py  -> heatmap_mean_ratings_named.png
   Session 2 (obj_46-obj_85): plot_session2_named.py -> heatmap_mean_ratings_session2_named.png
 
-Each session's figures copy THAT session's human-heatmap style (the two
-human scripts differ: session 1 uses YlOrRd at 20x18 / dpi 150, session 2 a
-lightened BuPu at 22x17 / dpi 200 with larger bold annotations). Row order
+Each session's figures copy THAT session's human-heatmap style. Both human
+scripts use the same lightened BuPu palette; they differ in size and text
+(session 1: 20x18 / dpi 150, session 2: 22x17 / dpi 200 with larger bold
+annotations). Row order
 (objects by numeric id), column order (ADJECTIVES), object names, fixed 1-7
 scale and 1-decimal rounding of the plotted values are identical to the
 human scripts. The style code is copied, not imported (the human scripts
@@ -162,7 +163,7 @@ BUPU_LIGHT = mcolors.LinearSegmentedColormap.from_list(
 SESSION_STYLE = {
     1: {
         'figsize': (20, 18),
-        'cmap': 'YlOrRd',
+        'cmap': BUPU_LIGHT,
         'annot_kws': {"size": 7.5},
         'title_suffix': '',
         'title_kws': {'fontsize': 16, 'fontweight': 'bold', 'pad': 14},
@@ -188,8 +189,8 @@ SESSION_STYLE = {
     },
 }
 
-# Both predicted heatmaps share one palette (session 2's lightened BuPu),
-# overriding session 1's YlOrRd so the two sessions read on the same colours.
+# Both predicted heatmaps use the lightened BuPu palette, the same one both
+# human scripts use, so the two sessions read on the same colours.
 PRED_CMAP = BUPU_LIGHT
 DIFF_CMAP = 'RdBu_r'   # red = model over-predicts, blue = under-predicts
 

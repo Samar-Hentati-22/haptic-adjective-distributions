@@ -12,6 +12,7 @@ import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import seaborn as sns
 
 # Optional object name mapping
@@ -142,11 +143,19 @@ mean_df.index = [get_label(obj_id) for obj_id in mean_df.index]
 
 fig, ax = plt.subplots(figsize=(20, 18))
 
+# Same palette as plot_session2_named.py (copied, not imported): the stock
+# "BuPu" colormap truncated to its light-to-mid range so every cell stays
+# readable.
+_bupu = plt.get_cmap("BuPu")
+heatmap_cmap = mcolors.LinearSegmentedColormap.from_list(
+    "BuPu_light", _bupu(np.linspace(0.08, 0.72, 256))
+)
+
 sns.heatmap(
     mean_df,
     ax=ax,
     vmin=1, vmax=7,
-    cmap="YlOrRd",
+    cmap=heatmap_cmap,
     annot=True,
     fmt=".1f",
     annot_kws={"size": 7.5},
