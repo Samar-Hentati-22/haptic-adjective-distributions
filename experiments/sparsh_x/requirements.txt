@@ -1,0 +1,31 @@
+# Sparsh-X experiment (experiments/sparsh_x/). Versions not yet pinned.
+#
+# These scripts run in a separate environment that also has the upstream
+# Sparsh-X repository installed. Set it up like this:
+#
+#   git clone https://github.com/facebookresearch/sparsh-multisensory-touch.git
+#   cd sparsh-multisensory-touch
+#   git checkout 219ee2f30c52da6eba1071c0a8e71b24ec33a697
+#   git apply <path-to-this-repo>/experiments/sparsh_x/patches/sparsh_d360_compat.patch
+#   pip install -e .
+#
+# Then set SPARSH_REPO to that folder (see model/src/paths.py).
+# The upstream repository provides its own dependency list (environment.yml,
+# setup.py). The checkpoints the scripts load (checkpoints/*.pth inside the
+# clone) come from upstream; see the upstream README for how to obtain them.
+#
+# Imports used by the scripts in this folder:
+torch
+numpy
+pandas
+h5py
+opencv-python
+Pillow
+hydra-core
+omegaconf
+# tactile_ssl and scripts.d360 come from the editable install above.
+#
+# dataset_sparshimg.py and train_sparshimg.py also import feature modules from
+# model/src (imu_features.py, pressure_ap_features.py, audio_ght_features.py):
+scipy
+librosa

@@ -1,0 +1,162 @@
+diff --git a/scripts/d360/mcap_utils.py b/scripts/d360/mcap_utils.py
+index f8a8127..87e2fbc 100644
+--- a/scripts/d360/mcap_utils.py
++++ b/scripts/d360/mcap_utils.py
+@@ -12,6 +12,7 @@ This module also provides methods to preprocess the D360 time series data for tr
+ 
+ import bisect
+ import os
++import re
+ from functools import partial
+ from pathlib import Path
+ from typing import Any, Dict, List, Literal, Optional, Tuple
+@@ -92,6 +93,30 @@ def load_image_data(file: str):
+     return devices, topics, msgs
+ 
+ 
++# ── COMPATIBILITY PATCH (not part of Meta's original data processing logic) ──
++# This repo's own D360 recordings namespace topics as "/d360_N/<subtopic>"
++# (device prefix). Our recordings (tactile project, no multi-device rig) use
++# "/<subtopic>/index_N" instead (device index as a trailing suffix, no
++# "d360_N" prefix at all), so the original substring filter ('"d360" in
++# channel.topic') and the "d360_N/subtopic" string-slicing below never
++# matched anything -- 0 messages were read. This helper rewrites our
++# convention into their expected "/d360_N/<subtopic>" string so every
++# downstream line (unchanged) works the same for both conventions. It does
++# NOT alter what data is extracted or how it's processed -- only which raw
++# topic strings are recognized as belonging to a D360 device.
++_OUR_TOPIC_SUFFIX_RE = re.compile(r"^/(.+)/index_(\d+)$")
++
++
++def _normalize_d360_topic(topic: str) -> str:
++    if "/d360_" in topic:
++        return topic  # already their native convention, unchanged
++    m = _OUR_TOPIC_SUFFIX_RE.match(topic)
++    if m:
++        subtopic, device_idx = m.group(1), m.group(2)
++        return f"/d360_{device_idx}/{subtopic}"
++    return topic  # not a D360 topic either way (e.g. /rosout) -- unchanged
++
++
+ def load_ros_data(
+     file: str,
+     image: bool = False,
+@@ -105,7 +130,15 @@ def load_ros_data(
+     extra_topics = extra_topics if extra_topics is not None else []
+ 
+     def check_image(topic: str):
+-        return image and "image_raw" in topic
++        # COMPATIBILITY PATCH: narrowed from "image_raw" in topic. Our
++        # recordings publish both an uncompressed "/image_raw/index_N" topic
++        # and the "/image_raw/compressed/index_N" topic their pipeline
++        # expects (the only one with a slot in the subtopics dict below);
++        # the loose substring match matched both and crashed on the
++        # uncompressed one (KeyError on append). Require the exact
++        # compressed subtopic so the raw variant is rejected by design, not
++        # silently skipped.
++        return image and "image_raw/compressed" in topic
+ 
+     def check_audio(topic: str):
+         return audio and "mic" in topic and "spec" not in topic
+@@ -166,11 +199,19 @@ def load_ros_data(
+             [
+                 channel.topic
+                 for _, channel in reader.get_summary().channels.items()
+-                if any([topic in channel.topic for topic in list_topics]) and check(channel.topic)
++                # COMPATIBILITY PATCH: match against the normalized topic so
++                # both "/d360_N/<subtopic>" (their convention) and
++                # "/<subtopic>/index_N" (ours) are recognized -- see
++                # _normalize_d360_topic above. check() itself is untouched.
++                if any([topic in _normalize_d360_topic(channel.topic) for topic in list_topics])
++                and check(channel.topic)
+             ]
+         )
+ 
+-    devices = sorted(list(set([topic.split("/", 2)[1] for topic in topics])))
++    # COMPATIBILITY PATCH: normalize before extracting the device id (see
++    # _normalize_d360_topic above); topics itself stays as the raw strings
++    # from the file, since read_ros2_messages must match the real channel names.
++    devices = sorted(list(set([_normalize_d360_topic(topic).split("/", 2)[1] for topic in topics])))
+     msgs = {device: {subtopic: [] for subtopic in subtopics} for device in devices}
+ 
+     if allegro:
+@@ -180,7 +221,10 @@ def load_ros_data(
+ 
+     print("Reading ROS2 messages...")
+     for msg in tqdm(read_ros2_messages(file, topics=topics)):
+-        topic = msg.channel.topic
++        # COMPATIBILITY PATCH: normalize before the "d360_N/subtopic" string
++        # slicing below (see _normalize_d360_topic above) -- a no-op for
++        # topics already in their native convention.
++        topic = _normalize_d360_topic(msg.channel.topic)
+         if "d360" in topic:
+             msgs[topic[1:7]][topic[8:]].append(msg)
+         elif "allegroHand" in topic:
+diff --git a/tactile_ssl/data/d360/utils.py b/tactile_ssl/data/d360/utils.py
+index ed8b39a..61f4eeb 100644
+--- a/tactile_ssl/data/d360/utils.py
++++ b/tactile_ssl/data/d360/utils.py
+@@ -417,7 +417,21 @@ def preprocess_imu(
+     device: str,
+     type: Literal["acc", "raw_acc", "raw_gyro", "raw_mag"],
+     split: bool = True,
++    sample_rate: float = 400.0,
++    min_samples: int = 32,
+ ):
++    # COMPATIBILITY PATCH (approved 2026-07-20): sample_rate/min_samples
++    # were hardcoded as 400 / 32, assuming the requested IMU "type" stream
++    # is sampled independently at ~400Hz. Our sensor instead round-robins
++    # all 4 IMU types (acc/gyro/mag/linacc) over one shared channel, so
++    # isolating a single type leaves it at ~1/4 the combined rate (~109.5Hz
++    # effective, not 400Hz) -- consecutive same-type samples are ~9ms apart,
++    # which the original tol=2/400=5ms treated as a gap, breaking every run
++    # into length-1 fragments and filtering out ALL data (0 segments survive
++    # the >32 threshold). Defaults are UNCHANGED (400, 32) -- this only
++    # takes effect if a caller explicitly overrides them (see
++    # validate_sparshx_real_pipeline.py's config override), so it does not
++    # alter behavior for their own natively-400Hz-sampled recordings.
+     assert len(topic) == 1, "Only 1 topic is expected for D360 IMU data."
+ 
+     time_amplifier = 65536
+@@ -430,10 +444,10 @@ def preprocess_imu(
+     raw_sensor_ts = np.array(imu_raw_data["sensor_ts"])[selected]
+     raw_sensor_ts = raw_sensor_ts / time_amplifier
+     raw_times = np.min(raw_times - raw_sensor_ts) + raw_sensor_ts
+-    tol = 2 / 400
++    tol = 2 / sample_rate
+     segs = np.concatenate([[0], np.where(np.diff(raw_sensor_ts) > tol)[0] + 1, [len(raw_sensor_ts)]])
+     segs = np.concatenate([segs[:-1, None], segs[1:, None]], axis=-1)
+-    segs = segs[segs[:, 1] - segs[:, 0] > 32]
++    segs = segs[segs[:, 1] - segs[:, 0] > min_samples]
+ 
+     times = [raw_times[seg[0] : seg[1]] for seg in segs]
+     imu = [raw_imu[seg[0] : seg[1]] for seg in segs]
+@@ -488,9 +502,18 @@ def preprocess_pressure(
+     topic: List[str],
+     device: str,
+     split: bool = True,
++    sample_rate: float = 200.0,
++    min_samples: int = 25,
+ ):
++    # COMPATIBILITY PATCH (approved 2026-07-20, same category as
++    # preprocess_imu's patch above): sample_rate/min_samples were hardcoded
++    # as 200 / 25. Our pressure_topic's actual measured rate is ~60Hz
++    # (median inter-message gap ~16.6ms, vs. their tol=2/200=10ms), so the
++    # original tolerance flagged nearly every real gap as a discontinuity,
++    # leaving 0 segments over the 25-sample minimum. Defaults are UNCHANGED
++    # -- only takes effect if a caller overrides them (see
++    # validate_sparshx_real_pipeline.py's config override).
+     assert len(topic) == 1, "Only 1 topic is expected for D360 pressure data."
+-    sample_rate = 200
+     tol = 2.0 / sample_rate
+ 
+     raw_data = msgs[device][topic[0]]
+@@ -504,7 +527,7 @@ def preprocess_pressure(
+ 
+     segs = np.concatenate([[0], np.where(np.diff(raw_times) > tol)[0] + 1, [len(raw_times)]])
+     segs = np.concatenate([segs[:-1, None], segs[1:, None]], axis=-1)
+-    segs = segs[segs[:, 1] - segs[:, 0] > 25]
++    segs = segs[segs[:, 1] - segs[:, 0] > min_samples]
+ 
+     times = [raw_times[seg[0] : seg[1]] for seg in segs]
+     pressure = [raw_pressure[seg[0] : seg[1]] for seg in segs]

@@ -1,0 +1,20 @@
+# Versions not yet pinned - to be filled from pip freeze. Cluster runs used Python 3.9.
+#
+# Main pipeline: model/, data_prep/, analysis/, tests/, human_study/ and
+# data_collection/mcap_to_hdf5.py.
+numpy
+scipy
+pandas
+h5py
+matplotlib
+seaborn
+opencv-python
+librosa
+scikit-image>=0.19
+torch
+torchvision>=0.13
+mcap
+
+# data_collection/mcap_to_hdf5.py and read_data.py also import rclpy and
+# rosidl_runtime_py. These come with a ROS 2 Jazzy installation, not from pip.
+# The Sparsh-X experiment has its own requirements: experiments/sparsh_x/requirements.txt

@@ -1,0 +1,46 @@
+# ── Data and caches ──────────────────────────────────────────────────────────
+cache/
+outputs/
+data/*
+!data/README.md
+*.npy
+*.npz
+*.h5
+*.hdf5
+*.mcap
+*.pickle
+*.pkl
+*.zip
+rosbag2_*/
+features_cache/
+processed_pickle/
+
+# ── Checkpoints ──────────────────────────────────────────────────────────────
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+slurm_*.out
+slurm_*.err
+logs/
+log/
+
+# ── ROS 2 builds ─────────────────────────────────────────────────────────────
+build/
+install/
+
+# ── Privacy-sensitive outputs ────────────────────────────────────────────────
+predictions_vs_truth.csv
+results/**/*.png
+
+# ── Environments and editor/tool files ───────────────────────────────────────
+__pycache__/
+*.pyc
+.venv*/
+venv/
+.claude/
+.~lock*
+*.orig_backup
+sparsh-multisensory-touch/
