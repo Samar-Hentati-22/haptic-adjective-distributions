@@ -238,4 +238,4 @@ This work (code, patch files, data and figures) is licensed under CC BY-NC 4.0. 
 
 ## Acknowledgements
 
-Thanks to Prof. Roberto Calandra (primary supervisor) and Prof. Merle Fairhurst (co-supervisor), and to Niklas Leukroth for the lab ROS 2 driver.
+Thanks to Prof. Roberto Calandra and Prof. Merle Fairhurst, and the members of the LASR Lab at TU Dresden for their support. Thanks to Niklas Leukroth for the lab's ROS 2 adaptation of the DIGIT 360 driver, and to the 20 participants who took part in the perception study.
