@@ -66,9 +66,33 @@ All metrics are computed per object (trial predictions averaged), then averaged.
 | Regularized, dropout 0.3, weight decay 5e-4 (ablation) | 0.1296 | 0.8733 | 0.014 |
 | Sparsh-X image features (negative result, 75 objects only) | 0.1189 | 0.7934 | 0.286 |
 
-SD is the sample standard deviation over the 5 seeds. EMD and MAE come from `results/*/final_results.json`. The r values were computed with `mean_per_adjective_r.py` from the per-object predictions, which are not included in this repository (see Data availability).
+SD is the sample standard deviation over the 5 seeds. EMD and MAE come from `results/*/final_results.json`. The r values come from the per-object predictions in `results/*/predictions_vs_truth.csv`. To recompute r for a run:
+
+```bash
+python analysis/results/mean_per_adjective_r.py --csv results/main_seed42/predictions_vs_truth.csv
+```
 
 **Per adjective (main run).** r is between about 0.57 and 0.78 for 13 adjectives. It is low for sticky, cold, warm, wet and dry (between −0.15 and 0.26). These five adjectives also have the lowest MAE. Their ratings cluster at one end of the scale, so a nearly constant prediction gets a low error without ranking the objects correctly.
+
+### Results figures
+
+All figures show the main run (seed 42, out-of-fold predictions). The heatmaps show one value per object and adjective.
+
+**Session 1 (obj_01–obj_45).** Human mean ratings, model predictions, and prediction minus human mean:
+
+![Human mean ratings, session 1](docs/figures/heatmap_human_session1.png)
+![Model predictions, session 1](docs/figures/heatmap_predicted_session1.png)
+![Prediction minus human mean, session 1](docs/figures/heatmap_diff_session1.png)
+
+**Session 2 (obj_46–obj_85).** Human mean ratings, model predictions, and prediction minus human mean:
+
+![Human mean ratings, session 2](docs/figures/heatmap_human_session2.png)
+![Model predictions, session 2](docs/figures/heatmap_predicted_session2.png)
+![Prediction minus human mean, session 2](docs/figures/heatmap_diff_session2.png)
+
+**Predicted vs. true expected rating**, one panel per adjective, one dot per object:
+
+![Predicted vs. true expected rating per adjective](docs/figures/predicted_vs_true_grid.png)
 
 ## Repository structure
 
@@ -86,8 +110,10 @@ analysis/
   figures/              example figures
   results/              result plots and metric scripts
 tests/                  diagnostic checks for features, dataset and model (need the data)
-results/                final_results.json and fold_k_results.json of each reported run
-data/README.md          expected data layout (no data included)
+results/                final_results.json, fold_k_results.json and predictions_vs_truth.csv of each reported run
+data/labels/            aggregate label files (see data/README.md)
+data/README.md          data layout
+docs/figures/           result figures used in this README
 ```
 
 Scripts write their outputs to `outputs/<script_name>/`. Training runs write to `outputs/train/results/` by default.
@@ -188,12 +214,15 @@ Only 75 objects are used. Objects 09, 10, 11, 26 and 57–62 have no usable Spar
 
 - Package versions are not pinned. Cluster runs used Python 3.9.
 - Sampling rates are assumed in the code, not read from the data: IMU about 438 Hz raw (109.5 Hz per stream after separation), pressure_ap 248 Hz, audio 48,000 Hz. These are unverified.
-- Whether the aggregate labels, predictions and figures may be shared is unverified.
-- The license is not decided.
 
 ## Data availability
 
-This repository contains no raw recordings, no participant data and no labels. Whether aggregated data can be shared is pending a decision by the supervisors. `data/README.md` describes the layout the code expects.
+Included:
+
+- Aggregate labels in `data/labels/`: the per-object rating distributions and expected ratings for all 85 objects. You can set `TACTILE_LABELS_DIR` to this folder.
+- Per-object predictions of each reported run in `results/*/predictions_vs_truth.csv`.
+
+Not included: participant-level ratings and raw sensor recordings (and the HDF5 files made from them). `data/README.md` describes the data layout.
 
 ## Third-party code and credits
 
@@ -205,7 +234,7 @@ This repository contains no raw recordings, no participant data and no labels. W
 
 ## License
 
-To be decided.
+This work (code, patch files, data and figures) is licensed under CC BY-NC 4.0. See `LICENSE`, which also lists the third-party material.
 
 ## Acknowledgements
 

@@ -1,0 +1,10 @@
+Copyright (c) 2026 Samar Hentati
+
+This work (code, patch files, data and figures) is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0). Full legal text: https://creativecommons.org/licenses/by-nc/4.0/legalcode
+
+Third-party material
+--------------------
+
+experiments/sparsh_x/patches/ contains modified excerpts of facebookresearch/sparsh-multisensory-touch (commit 219ee2f30c52da6eba1071c0a8e71b24ec33a697), Copyright (c) Meta Platforms, Inc. and affiliates, licensed under CC BY-NC 4.0.
+
+Data collection relies on facebookresearch/digit360 (CC BY-NC 4.0), which is not included in this repository.

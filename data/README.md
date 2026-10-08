@@ -1,6 +1,8 @@
 # Data layout
 
-**No data is included in this repository.** There are no raw recordings, no HDF5 files, no participant data and no label files. This page describes the layout the code expects, so that you can point it at your own copy.
+**Included:** the aggregate label files in `data/labels/` (see [Included label files](#included-label-files-datalabels)) and, outside this folder, the per-object predictions in `results/*/predictions_vs_truth.csv`.
+
+**Not included:** raw recordings, the HDF5 files made from them, and participant-level ratings. This page describes the layout the code expects, so that you can point it at your own copy.
 
 Every value below is quoted with the file and line it comes from.
 
@@ -112,6 +114,19 @@ Written by `human_study/build_labels.py --out-dir <folder>` from `labels_distrib
 Adjective order (axis 1): hard, soft, rough, smooth, bumpy, flat, sticky, slippery, cold, warm, wet, dry, compressible, firm, fuzzy, scratchy, pleasant, irritating (`human_study/build_labels.py` `ADJECTIVES`).
 
 `labels_distribution.csv` (85 rows × 127 columns: `object_id` plus `<adjective>_<level>`) comes from `human_study/build_label_distributions.py`. For each object and adjective it counts the ratings at each level, divides by the number of non-missing ratings, and rounds to 6 decimals (lines 50-58).
+
+## Included label files (`data/labels/`)
+
+These four files are in the repository. They contain per-object aggregates only, with no participant IDs. To use them for training or analysis, set `TACTILE_LABELS_DIR=<repo>/data/labels`.
+
+| File | Shape | dtype | Contents |
+|---|---|---|---|
+| `labels_distribution.csv` | 85 rows × 127 columns | text | `object_id`, then `<adjective>_1` … `<adjective>_7` for the 18 adjectives: the fraction of ratings at each level (columns written by `human_study/build_label_distributions.py:40, 58`) |
+| `labels_phase2.npy` | (85, 18, 7) | float32 | the same distributions as an array (`human_study/build_labels.py:59, 65`) |
+| `labels_mean_phase2.npy` | (85, 18) | float32 | expected rating per object and adjective, on the 1–7 scale (`human_study/build_labels.py:60, 66`) |
+| `object_ids_phase2.npy` | (85,) | object (strings) | `obj_01` … `obj_85`, the row order of both arrays (`human_study/build_labels.py:53, 57`) |
+
+The three `.npy` files were built from `labels_distribution.csv` by `build_labels.py`. Rebuilding them from this CSV gives identical arrays. Load `object_ids_phase2.npy` with `np.load(..., allow_pickle=True)`.
 
 ## Optional caches
 

@@ -32,6 +32,8 @@ build/
 install/
 
 # ── Privacy-sensitive outputs ────────────────────────────────────────────────
+# predictions_vs_truth.csv is ignored everywhere except the shipped
+# results/<run>/ copies re-allowed at the end of this file.
 predictions_vs_truth.csv
 results/**/*.png
 
@@ -44,3 +46,12 @@ venv/
 .~lock*
 *.orig_backup
 sparsh-multisensory-touch/
+
+# ── Shared aggregate data and figures (tracked) ─────────────────────────────
+# Must stay at the end so these exceptions override the rules above.
+!data/labels/
+data/labels/*
+!data/labels/*.csv
+!data/labels/*.npy
+!results/*/predictions_vs_truth.csv
+!docs/figures/*.png
