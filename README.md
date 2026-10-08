@@ -1,6 +1,6 @@
 # Predicting Human Perceptual Distributions of Haptic Adjectives
 
-This repository holds the code for the Master's thesis "Predicting Human Perceptual Distributions of Haptic Adjectives" by Samar (INSAT, Tunisia, and TU Dresden, LASR Lab). We recorded 85 everyday objects with a Meta DIGIT 360 tactile sensor. Twenty people rated the same objects on 18 haptic adjectives. A multimodal neural network takes the sensor recordings and predicts, for each object and adjective, the full distribution of human ratings over the 7-point scale, not only the mean. The code covers data collection, label building, preprocessing, training, evaluation and one negative-result experiment with Sparsh-X image features.
+This repository holds the code for the Master's thesis "Predicting Human Perceptual Distributions of Haptic Adjectives" by Samar Hentati (INSAT, Tunisia, and TU Dresden, LASR Lab). We recorded 85 everyday objects with a Meta DIGIT 360 tactile sensor. Twenty people rated the same objects on 18 haptic adjectives. A multimodal neural network takes the sensor recordings and predicts, for each object and adjective, the full distribution of human ratings over the 7-point scale, not only the mean. The code covers data collection, label building, preprocessing, training, evaluation and one negative-result experiment with Sparsh-X image features.
 
 ## Overview
 
@@ -19,7 +19,7 @@ Details: [docs/methodology.md](docs/methodology.md).
 - **IMU:** DFT321 on the accelerometer, then MFCCs plus summary statistics, then an MLP.
 - **pressure_ap:** resampled to (224, 50), then a 2D CNN.
 - **Audio:** stereo log-mel spectrogram, then a CNN.
-- **Fusion:** the four branch outputs are concatenated, and an MLP head with a softmax gives an 18 × 7 distribution.
+- **Fusion:** the four branch outputs are concatenated, and an MLP head with a softmax gives an 18 probability distributions over 7 rating levels.
 
 `pressure` and `ght` are recorded but not used.
 
